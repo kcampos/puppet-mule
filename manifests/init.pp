@@ -39,7 +39,7 @@ class mule ( $parentdir          = '/usr/local',
         ensure        => present,
         url           => $version_type ? {
             'standalone' => "${mirror}/mule-${version_type}-${version}.tar.gz",
-            'default'    => fail("mule:: only support standalone installs for now"),
+            default      => fail("mule:: only support standalone installs for now"),
         },
         src_target    => $parentdir,
     }
