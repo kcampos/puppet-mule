@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+# Init file for Mule server
+#
+# chkconfig: 2345 55 25
+# description: Mule server
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+MULE_USER="<%= user %>"
+MULE_HOME="<%= basedir %>"
+JAVA_HOME="<%= java_home %>"
+PID_FILE="<%= basedir %>/bin/mule.pid"
+
+PROG="mule"
+
+help() {
+    echo "$0 INVALID SYNTAX ::  Use:"
+	echo "$0 {stop | start | restart | status}"
+}
+
+start() {
+	echo -n "Starting ${PROG}: "
+	su --login --command "${MULE_HOME}/bin/mule start" ${MULE_USER}
+	echo "done.";
+}
+
+stop() {
+    echo "Stopping ${PROG}: "
+
+    su --login --command "${MULE_HOME}/bin/mule stop" ${MULE_USER}
+
+    # Use the pid file if it exists.
+    if [[ -f ${PID_FILE} ]]; then
+	    for  i in 1 2 3; do
+            if [[ -d /proc/`cat ${PID_FILE}` ]]; then
+                kill `cat ${PID_FILE}`
+                sleep 30
+            fi
+        done
+        rm -f ${PID_FILE}
+    else
+        # The mule procs for mule cle user
+        PIDS=`ps -u ${MULE_USER} --no-headers -o pid,cmd | grep "${MULE_HOME}" | awk '{ print $1 }'`
+        for PID in ${PIDS}; do
+            for  i in 1 2 3; do
+                if [[ -d /proc/${PID} ]]; then
+                    kill ${PID}
+                    sleep 20
+                fi
+            done
+            
+            if [[ -d /proc/${PID} ]]; then
+                kill -9 ${PID}
+            fi
+        done
+    fi
+    echo 'done'
+}
+
+status(){
+    PID=""
+    # Use the pid file if it exists.
+    if [[ -f ${PID_FILE} ]]; then
+	    PID=`cat ${PID_FILE}`
+    else
+        # The mule procs for mule cle user
+        PID=`ps -u ${MULE_USER} --no-headers -o pid,cmd | grep "${MULE_HOME}" | awk '{ print $1 }'`
+    fi
+
+    EXIT=0
+    if [[ "x${PID}" == "x" ]]; then
+        echo "${PROG} is not running"
+        EXIT=1
+    else
+        echo "${PROG} is running with PID=${PID}"
+    fi
+    exit $EXIT
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    status)
+        status
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+esac
+
+exit 0
