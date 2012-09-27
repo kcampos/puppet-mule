@@ -1,6 +1,6 @@
 # = Class: mule
 #
-# Install mule.
+# Install mule
 #
 # == Parameters:
 #
@@ -39,7 +39,7 @@ class mule ( $parentdir          = '/usr/local',
         ensure        => present,
         url           => $version_type ? {
             'standalone' => "${mirror}/mule-${version_type}-${version}.tar.gz",
-            'embedded'   => "${mirror}/mule-${version}-${version_type}.jar",
+            'default'    => fail("mule:: only support standalone installs for now"),
         },
         src_target    => $parentdir,
     }
