@@ -56,7 +56,7 @@ class mule ( $parentdir          = '/usr/local',
     exec { "chown-mule-${version_type}-${version}" :
         command => "chown -R ${user}:${group} ${parentdir}/mule-${version_type}-${version}/*",
         unless  => "[ `stat -c %U ${parentdir}/mule-${version}/conf` == ${user} ]",
-        require => Archive::Extract["mule-${version}"],
+        require => Archive::Extract["mule-${version_type}-${version}"],
         refreshonly => true,
     }
 
@@ -70,7 +70,7 @@ class mule ( $parentdir          = '/usr/local',
         ensure  => directory,
         owner   => $user,
         group   => $group,
-        require => Archive::Extract["mule-${version}"],
+        require => Archive::Extract["mule-${version_type}-${version}"],
     }
     
     file { '/var/log/mule':
