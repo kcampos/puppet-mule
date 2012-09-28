@@ -42,6 +42,7 @@ class mule ( $parentdir          = '/usr/local',
             default      => fail("mule:: only support standalone installs for now"),
         },
         src_target    => $parentdir,
+        checksum      => false,
     }
 
     archive::extract { "mule-${version}":
