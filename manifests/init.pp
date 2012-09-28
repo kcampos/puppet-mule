@@ -35,7 +35,7 @@ class mule ( $parentdir          = '/usr/local',
                     
     $basedir     = "${parentdir}/mule"
 
-    archive::download { "mule-${version}.tar.gz":
+    archive::download { "mule-${version_type}-${version}.tar.gz":
         ensure        => present,
         url           => $version_type ? {
             'standalone' => "${mirror}/mule-${version_type}-${version}.tar.gz",
@@ -45,16 +45,16 @@ class mule ( $parentdir          = '/usr/local',
         checksum      => false,
     }
 
-    archive::extract { "mule-${version}":
+    archive::extract { "mule-${version_type}-${version}":
         ensure  => present,
         target  => $parentdir,
         src_target => $parentdir,
-        require => Archive::Download["mule-${version}.tar.gz"],
-        notify  => Exec["chown-mule-${version}"],
+        require => Archive::Download["mule-${version_type}-${version}.tar.gz"],
+        notify  => Exec["chown-mule-${version_type}-${version}"],
     }
 
-    exec { "chown-mule-${version}" :
-        command => "chown -R ${user}:${group} ${parentdir}/mule-${version}/*",
+    exec { "chown-mule-${version_type}-${version}" :
+        command => "chown -R ${user}:${group} ${parentdir}/mule-${version_type}-${version}/*",
         unless  => "[ `stat -c %U ${parentdir}/mule-${version}/conf` == ${user} ]",
         require => Archive::Extract["mule-${version}"],
         refreshonly => true,
@@ -62,13 +62,14 @@ class mule ( $parentdir          = '/usr/local',
 
     file { $basedir: 
         ensure => link,
-        target => "${parentdir}/mule-${version}",
-        require => Archive::Extract["mule-${version}"],
+        target => "${parentdir}/mule-${version_type}-${version}",
+        require => Archive::Extract["mule-${version_type}-${version}"],
     }
 
-    file { "${parentdir}/mule-${version}":
-        ensure => directory,
-        owner  => $user,
+    file { "${parentdir}/mule-${version_type}-${version}":
+        ensure  => directory,
+        owner   => $user,
+        group   => $group,
         require => Archive::Extract["mule-${version}"],
     }
     
@@ -79,10 +80,10 @@ class mule ( $parentdir          = '/usr/local',
         mode   => 0775,
     }
 
-    file { "${parentdir}/mule-${version}/logs":
+    file { "${parentdir}/mule-${version_type}-${version}/logs" :
         ensure => link,
         target => "/var/log/mule",
-        require => [ Archive::Extract["mule-${version}"], File['/var/log/mule'], ],
+        require => [ Archive::Extract["mule-${version_type}-${version}"], File['/var/log/mule'], ],
         force => true,
     }
     
