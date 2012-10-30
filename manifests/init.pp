@@ -32,80 +32,80 @@ class mule ( $parentdir          = '/usr/local',
              $user               = 'root',
              $group              = 'root',
              ) {
-                    
-    $basedir     = "${parentdir}/mule"
+  
+  $basedir     = "${parentdir}/mule"
 
-    archive::download { "mule-${version_type}-${version}.tar.gz":
-        ensure        => present,
-        url           => $version_type ? {
-            'standalone' => "${mirror}/mule-${version_type}-${version}.tar.gz",
-            default      => fail("mule:: only support standalone installs for now"),
-        },
-        src_target    => $parentdir,
-        checksum      => false,
-    }
+  archive::download { "mule-${version_type}-${version}.tar.gz":
+    ensure        => present,
+    url           => $version_type ? {
+      'standalone' => "${mirror}/mule-${version_type}-${version}.tar.gz",
+      default      => fail("mule:: only support standalone installs for now"),
+    },
+    src_target    => $parentdir,
+    checksum      => false,
+  }
 
-    archive::extract { "mule-${version_type}-${version}":
-        ensure  => present,
-        target  => $parentdir,
-        src_target => $parentdir,
-        require => Archive::Download["mule-${version_type}-${version}.tar.gz"],
-        notify  => Exec["chown-mule-${version_type}-${version}"],
-    }
+  archive::extract { "mule-${version_type}-${version}":
+    ensure  => present,
+    target  => $parentdir,
+    src_target => $parentdir,
+    require => Archive::Download["mule-${version_type}-${version}.tar.gz"],
+    notify  => Exec["chown-mule-${version_type}-${version}"],
+  }
 
-    exec { "chown-mule-${version_type}-${version}" :
-        command => "chown -R ${user}:${group} ${parentdir}/mule-${version_type}-${version}/*",
-        unless  => "[ `stat -c %U ${parentdir}/mule-${version}/conf` == ${user} ]",
-        require => Archive::Extract["mule-${version_type}-${version}"],
-        refreshonly => true,
-    }
+  exec { "chown-mule-${version_type}-${version}" :
+    command => "chown -R ${user}:${group} ${parentdir}/mule-${version_type}-${version}/*",
+    unless  => "[ `stat -c %U ${parentdir}/mule-${version}/conf` == ${user} ]",
+    require => Archive::Extract["mule-${version_type}-${version}"],
+    refreshonly => true,
+  }
 
-    file { $basedir: 
-        ensure => link,
-        target => "${parentdir}/mule-${version_type}-${version}",
-        require => Archive::Extract["mule-${version_type}-${version}"],
-    }
+  file { $basedir: 
+    ensure => link,
+    target => "${parentdir}/mule-${version_type}-${version}",
+    require => Archive::Extract["mule-${version_type}-${version}"],
+  }
 
-    file { "${parentdir}/mule-${version_type}-${version}":
-        ensure  => directory,
-        owner   => $user,
-        group   => $group,
-        require => Archive::Extract["mule-${version_type}-${version}"],
-    }
+  file { "${parentdir}/mule-${version_type}-${version}":
+    ensure  => directory,
+    owner   => $user,
+    group   => $group,
+    require => Archive::Extract["mule-${version_type}-${version}"],
+  }
     
-    file { '/var/log/mule':
-        ensure => directory,
-        owner  => root,
-        group  => $group,
-        mode   => 0775,
-    }
+  file { '/var/log/mule':
+    ensure => directory,
+    owner  => root,
+    group  => $group,
+    mode   => 0775,
+  }
 
-    file { "${parentdir}/mule-${version_type}-${version}/logs" :
-        ensure => link,
-        target => "/var/log/mule",
-        require => [ Archive::Extract["mule-${version_type}-${version}"], File['/var/log/mule'], ],
-        force => true,
-    }
+  file { "${parentdir}/mule-${version_type}-${version}/logs" :
+    ensure => link,
+    target => "/var/log/mule",
+    require => [ Archive::Extract["mule-${version_type}-${version}"], File['/var/log/mule'], ],
+    force => true,
+  }
     
-    file { '/etc/profile.d/mule.sh':
-        mode    => 0755,
-        content => "export MULE_HOME=${basedir}",
-        require => File[$basedir],
-    }
+  file { '/etc/profile.d/mule.sh':
+    mode    => 0755,
+    content => "export MULE_HOME=${basedir}",
+    require => File[$basedir],
+  }
 
-    file { "/etc/init.d/mule":
-        ensure => present,
-        owner  => root,
-        group  => root,
-        mode   => 0755,
-        content => template('mule/mule.init.erb'),
-        require => File[$basedir],
-    }
+  file { "/etc/init.d/mule":
+    ensure => present,
+    owner  => root,
+    group  => root,
+    mode   => 0755,
+    content => template('mule/mule.init.erb'),
+    require => File[$basedir],
+  }
 
-    service { 'mule':
-        ensure  => running,
-        enable => true,
-        require => File["/etc/init.d/mule"]
-    }
+  service { 'mule':
+    ensure  => running,
+    enable => true,
+    require => File["/etc/init.d/mule"]
+  }
 
 }
